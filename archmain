@@ -1,0 +1,331 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# =========== CONFIGURATION =================
+
+# SUDO CHECK
+
+if [ "$EUID" -ne 0 ]; then
+  echo "Run this script with sudo"
+  exit 1
+fi
+
+if [ -n "$SUDO_USER" ]; then
+  echo "Running via sudo (user: $SUDO_USER)"
+else
+  echo "Running as root directly"
+fi
+
+# DEFINE PATHS
+
+USER_HOME="$(eval echo ~$SUDO_USER)"
+: "${ARCHMAIN_REC:=$USER_HOME}"
+: "${ARCHMAIN_DEST:=/mnt/backup}"
+: "${ARCHMAIN_LOGFILE:=$USER_HOME/archmain-log.txt}"
+: "${ARCHMAIN_HEALTHFILE:=$USER_HOME/archmain-health.txt}"
+
+REC="$ARCHMAIN_REC"
+DEST="$ARCHMAIN_DEST"
+LOGFILE="$ARCHMAIN_LOGFILE"
+HEALTHFILE="$ARCHMAIN_HEALTHFILE"
+
+declare -A LOADED_MODULES=()
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# =========== ERROR & SAFETY HANDLING =======
+
+# LOGGING FUNCTION
+
+log() {
+
+    if [[ ! -f "$LOGFILE" ]]; then
+        mkdir -p "$(dirname "$LOGFILE")"
+        touch "$LOGFILE"
+    fi
+
+    echo "LOG: $(date '+%F %T') - $1" | tee -a "$LOGFILE"
+
+}
+
+log "Archmain started"
+
+# SILENT FAIL
+
+ignore_fail() {
+
+    if ! "$@"; then
+        log "Ignored failure: $*"
+    fi
+
+}
+
+# WARNED FAIL
+
+warn_fail() {
+
+    if ! "$@"; then
+        echo "Warning: $* failed"
+        log "WARNING: $* failed"
+    fi
+
+}
+
+# ERROR TRAP
+
+catch() {
+
+    local line=$1
+    local cmd=$2
+    local exit_code=$?
+
+    echo "Error on line $line: $cmd (exit $exit_code)"
+    log "ERROR: line $line: $cmd (exit $exit_code)"
+
+}
+
+trap catch ERR
+
+## CONFIRM FUNCTION
+
+confirm() {
+    local prompt="${1:-Are you sure?}"
+    read -r -p "$prompt [y/N]: " ans
+    case "$ans" in
+        [yY]|[yY][eE][sS]) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+# QUIT FUNCTION
+
+quit() {
+
+    log "Quit"
+    echo "Goodbye!"
+    exit 0
+
+}
+
+# CHECK TOOLS
+
+echo "Checking correct tools..."
+log "Checking correct tools"
+
+check_dep() {
+    if ! command -v "$1" >/dev/null; then
+        echo "Error: required dependency '$1' is not installed." >&2
+        log "Missing dependency: $1"
+        exit 1
+    fi
+}
+
+check_dep pacman
+check_dep rsync
+check_dep fwupdmgr
+check_dep pacdiff
+
+echo "All tools installed!"
+
+# AUR CHECKER
+
+#: "${AUR_HELPER:=yay}"
+
+#detect_aur_helper() {
+#    for helper in paru pikaur trizen pamac aurman; do
+#        if command -v "$helper" >/dev/null; then
+#            AUR_HELPER="$helper"
+#            return 0
+#        fi
+#    done
+#    return 1
+#}
+
+# Implement a  case loop with commands in software - clean - etc...
+
+
+# SOURCE FILE CHECK
+
+if [[ "$SCRIPT_DIR" == "/usr/local/bin" ]]; then
+    LIB_DIR="/usr/local/lib/archmain"
+else
+    LIB_DIR="$SCRIPT_DIR"
+fi
+
+check() {
+
+    local name="$1"
+    local file="$LIB_DIR/modules/$name.sh"
+
+    log "Checking source file $name"
+
+    # already loaded → skip
+    if [[ -n "${LOADED_MODULES[$name]:-}" ]]; then
+        return
+    fi
+
+    if [[ ! -f "$file" ]]; then
+        echo "Source file $file not found. Exiting!"
+        exit 1
+    fi
+
+    # shellcheck source=/dev/null
+    source "$file"
+    echo "Module $file is sourced!"
+    LOADED_MODULES[$name]=1
+
+    echo "Module '$name' sourced from: $file"
+    log "Module '$name' sourced from: $file"
+
+}
+
+# =========== MENU PRINT =================
+
+# MENU FUNCTION
+show_menu() {
+    echo "Arch Linux Maintenance Script"
+    echo "-----------------------------"
+    echo
+    echo "Select an action:"
+    echo
+    echo "1 Backup files and services"
+    echo "2 Update software"
+    echo "3 Upgrade firmware"
+    echo "4 List and remove orphaned packages"
+    echo "5 Clean package cache"
+    echo "6 Inspect failed services and errors"
+    echo "7 Clean journal logs"
+    echo "8 List 10 biggest directories and files in home"
+    echo
+    echo "d System health check"
+    echo
+    echo "q Quit"
+    echo
+}
+
+# =========== MAIN  ====================
+
+# ARGUMENT PARSING
+if [[ -n ${1:-} ]]; then
+
+    case "$1" in
+
+        backup) echo "Backing up files..."
+                echo
+                check backup
+                backup_files
+                echo
+                echo
+                echo
+                exit 0
+                ;;
+
+        update) echo "Updating software"
+                echo
+                check software
+                update_software
+                echo
+                echo
+                echo
+                exit 0
+                ;;
+
+        clean)  echo "Cleaning cache"
+                echo
+                check clean
+                clean_cache
+                echo
+                echo
+                echo
+                exit 0
+                ;;
+
+        orphaned)
+                echo "Creating orphaned list"
+                echo
+                check orphaned
+                orphaned_pkg
+                echo
+                echo
+                echo
+                exit 0
+                ;;
+
+        syscheck)
+                echo "Creating report"
+                echo
+                check doctor
+                system_check
+                echo
+                echo
+                echo
+                exit 0
+                ;;
+
+        "")     ;;
+
+        *)      echo "Archmaint arguments: backup | update | clean | orphaned | syscheck"
+                exit 1
+                ;;
+
+    esac
+
+fi
+
+# MAIN LOOP
+while true
+do
+    command -v clear >/dev/null && clear
+    show_menu
+    read -rp "Your choice: " choice
+    command -v clear >/dev/null && clear
+
+    case $choice in
+
+        1)  check backup
+            backup_files
+            ;;
+
+        2)  check software
+            update_software
+            ;;
+
+        3)  check firmware
+            update_firmware
+            ;;
+
+        4)  check orphaned
+            orphaned_pkg
+            ;;
+
+        5)  check cache
+            clean_cache
+            ;;
+
+        6)  check failed
+            log_inspect
+            ;;
+
+        7)  check journal
+            clean_journal
+            ;;
+
+        8)  check files
+            big_files
+            ;;
+
+        d)  check doctor
+            system_check
+            ;;
+
+        q|Q)quit
+            ;;
+
+        *)  echo "Invalid option."
+            ;;
+
+    esac
+
+    echo
+    read -r -p "Press Enter to return to menu..." _
+
+done
