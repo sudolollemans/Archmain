@@ -7,3 +7,10 @@ Free to use but check the code first and at least change the paths. It should be
 I'll try to put a decent explanation here about the functions when I have time to do so. 
 
 I'm planning on implementing popular AUR helper support and a file manager by improving one of the modules (files.sh). 
+
+Short explanation: 
+Running with _archmain_ opens the menu. 
+
+Use functions directly with _(sudo) archmain <module name>_ 
+Only possible with functions: backup | update | clean | orphaned | syscheck
+
