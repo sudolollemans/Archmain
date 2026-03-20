@@ -6,7 +6,7 @@ Free to use but check the code first and at least change the paths. It should be
 
 I'll try to put a decent explanation here about the functions when I have time to do so. 
 
-I'm planning on implementing popular AUR helper support and a file manager by improving one of the modules (files.sh). 
+I'm planning on implementing popular AUR helper support, and a file manager by improving one of the modules (files.sh). 
 
 
 ------------------------------------------------------------------------------------
