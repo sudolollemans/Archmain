@@ -8,9 +8,11 @@ I'll try to put a decent explanation here about the functions when I have time t
 
 I'm planning on implementing popular AUR helper support and a file manager by improving one of the modules (files.sh). 
 
-Short explanation: 
+
+------------------------------------------------------------------------------------
+
 Running with _archmain_ opens the menu. 
 
-Use functions directly with _(sudo) archmain <module name>_ 
+Use functions directly with _(sudo) archmain modulename_
 Only possible with functions: backup | update | clean | orphaned | syscheck
 
