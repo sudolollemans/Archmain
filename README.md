@@ -11,8 +11,8 @@ I'm planning on implementing popular AUR helper support, and a file manager by i
 
 ------------------------------------------------------------------------------------
 
-Running with _archmain_ opens the menu. 
+Running with "_archmain_" opens the menu. 
 
-Use functions directly with _(sudo) archmain modulename_
+Use functions directly with "_(sudo) archmain modulename_"
 Only possible with functions: backup | update | clean | orphaned | syscheck
 
