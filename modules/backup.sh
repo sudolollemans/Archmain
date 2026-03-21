@@ -19,7 +19,6 @@ backup_files() {
         return 1
     fi
 
-    USER_HOME="$(eval echo ~$SUDO_USER)"
     echo "Preview: Home backup (dry run)"
     rsync -aAXHv --delete --dry-run \
         --exclude=".cache/" \
@@ -48,6 +47,7 @@ backup_files() {
     rsync -aAXHv --numeric-ids --delete --dry-run /etc/ "$DEST/etc/"
 
     echo "WARNING: This will overwrite files in $DEST/etc/"
+
     if confirm "Proceed with /etc backup?"; then
         rsync -aAXHv --numeric-ids --delete /etc/ "$DEST/etc/"
     fi

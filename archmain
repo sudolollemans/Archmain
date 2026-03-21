@@ -1,33 +1,48 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -uo pipefail
 
 # =========== CONFIGURATION =================
 
 # SUDO CHECK
-
-if [ "$EUID" -ne 0 ]; then
-  echo "Run this script with sudo"
-  exit 1
+if [[ $EUID -ne 0 ]]; then
+    echo "Run this script with sudo"
+    exit 1
 fi
 
-if [ -n "$SUDO_USER" ]; then
-  echo "Running via sudo (user: $SUDO_USER)"
-else
-  echo "Running as root directly"
+if [[ -z "${SUDO_USER:-}" ]]; then
+    echo "Do not run as root directly. Use sudo."
+    exit 1
 fi
+
+echo "Running via sudo (user: $SUDO_USER)"
 
 # DEFINE PATHS
+USER_HOME="$(getent passwd "$SUDO_USER" | cut -d: -f6)"
 
-USER_HOME="$(eval echo ~$SUDO_USER)"
-: "${ARCHMAIN_REC:=$USER_HOME}"
-: "${ARCHMAIN_DEST:=/mnt/backup}"
-: "${ARCHMAIN_LOGFILE:=$USER_HOME/archmain-log.txt}"
-: "${ARCHMAIN_HEALTHFILE:=$USER_HOME/archmain-health.txt}"
+if [[ -z "$USER_HOME" || ! -d "$USER_HOME" ]]; then
+    echo "Error: Could not determine valid home directory for $SUDO_USER"
+    exit 1
+fi
+
+if [[ "$USER_HOME" == "/root" || "$USER_HOME" == "/" ]]; then
+    echo "Critical safety check failed: USER_HOME=$USER_HOME"
+    exit 1
+fi
+
+: "${ARCHMAIN_REC:="$USER_HOME"}"
+: "${ARCHMAIN_DEST:="/mnt/backup"}"
+: "${ARCHMAIN_LOGFILE:="$USER_HOME/archmain-log.txt"}"
+: "${ARCHMAIN_HEALTHFILE:="$USER_HOME/archmain-health.txt"}"
 
 REC="$ARCHMAIN_REC"
 DEST="$ARCHMAIN_DEST"
 LOGFILE="$ARCHMAIN_LOGFILE"
 HEALTHFILE="$ARCHMAIN_HEALTHFILE"
+
+if [[ -z "$DEST" || "$DEST" == "/" ]]; then
+    echo "Critical safety check failed: DEST=$DEST"
+    exit 1
+fi
 
 declare -A LOADED_MODULES=()
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -63,9 +78,25 @@ ignore_fail() {
 
 warn_fail() {
 
-    if ! "$@"; then
-        echo "Warning: $* failed"
-        log "WARNING: $* failed"
+    local run_as_user=false
+
+    # Detect flag
+    if [[ "$1" == "--user" ]]; then
+        run_as_user=true
+        shift
+    fi
+
+    if $run_as_user; then
+        sudo -u "$SUDO_USER" "$@"
+    else
+        "$@"
+    fi
+
+    local status=$?
+
+    if [[ $status -ne 0 ]]; then
+        echo "Command failed: $*"
+        return $status
     fi
 
 }
@@ -83,7 +114,7 @@ catch() {
 
 }
 
-trap catch ERR
+trap 'catch $LINENO "$BASH_COMMAND"' ERR
 
 ## CONFIRM FUNCTION
 
@@ -128,20 +159,30 @@ echo "All tools installed!"
 
 # AUR CHECKER
 
-#: "${AUR_HELPER:=yay}"
+AUR_HELPER=""
 
-#detect_aur_helper() {
-#    for helper in paru pikaur trizen pamac aurman; do
-#        if command -v "$helper" >/dev/null; then
-#            AUR_HELPER="$helper"
-#            return 0
-#        fi
-#    done
-#    return 1
-#}
+for helper in yay paru pikaur trizen pamac aurman; do
+    if command -v "$helper" >/dev/null 2>&1; then
+        AUR_HELPER="$helper"
+        break
+    fi
+done
 
-# Implement a  case loop with commands in software - clean - etc...
+if [[ -n "$AUR_HELPER" ]]; then
+    echo "AUR helper recognised: $AUR_HELPER"
+else
+    echo "AUR helper not found or supported. Program will run without."
+    AUR_HELPER="None"
+fi
 
+echo "AUR helper set to $AUR_HELPER."
+
+if ! confirm "Do you want to continue?"; then
+    echo "Closing down."
+    exit 1
+else
+    echo "Moving to main program with AUR helper set to $AUR_HELPER"
+fi
 
 # SOURCE FILE CHECK
 
@@ -297,7 +338,7 @@ do
             orphaned_pkg
             ;;
 
-        5)  check cache
+        5)  check clean
             clean_cache
             ;;
 

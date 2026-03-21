@@ -25,14 +25,6 @@ system_check() {
     orphans=$(pacman -Qtdq 2>/dev/null || true)
     [[ -z "$orphans" ]] && echo "None" || echo "$orphans" | tee -a "$HEALTHFILE"
 
-    # Orphaned AUR packages
-    log_section "ORPHANED AUR PACKAGES"
-    if command -v yay >/dev/null; then
-        yay -Qtdq 2>/dev/null | tee -a "$HEALTHFILE" || true
-    else
-        echo "No supported AUR helper found" | tee -a "$HEALTHFILE"
-    fi
-
     # Journal errors
     log_section "JOURNAL ERRORS (last 50)"
     journalctl -p 3 -xb -n 50 | tee -a "$HEALTHFILE"
@@ -42,11 +34,24 @@ system_check() {
     pacman -Qu | tee -a "$HEALTHFILE" || true
 
     log_section "AVAILABLE AUR UPDATES"
-    if command -v yay >/dev/null; then
-        yay -Qu | tee -a "$HEALTHFILE" || true
-    else
-        echo "No supported AUR helper found" | tee -a "$HEALTHFILE"
-    fi
+    case "$AUR_HELPER" in
+        yay|paru|pikaur|trizen|aurman)
+            cmd=("$AUR_HELPER" -Qu)
+            ;;
+        pamac)
+            cmd=(pamac checkupdates)
+            ;;
+        None)
+            echo "No AUR helper configured."
+            return
+            ;;
+        *)
+            echo "Unknown AUR helper."
+            return
+            ;;
+    esac
+
+    warn_fail --user "${cmd[@]}" 2>&1 | tee -a "$HEALTHFILE" || true
 
     # Firmware
     log_section "FIRMWARE UPDATES"

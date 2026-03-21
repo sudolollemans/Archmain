@@ -17,7 +17,7 @@ update_firmware() {
 
     # Optional apply with confirmation
     if confirm "Firmware updates are available. Proceed with applying them? WARNING: may reboot or brick device"; then
-        warn_fail sudo fwupdmgr update
+        warn_fail fwupdmgr update
         echo "Firmware update process finished. Check logs for details."
     else
         echo "Firmware update skipped."

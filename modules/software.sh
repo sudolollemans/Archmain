@@ -11,23 +11,42 @@ update_software() {
         echo "Pacman update skipped."
     fi
 
-    # AUR update
-    if command -v yay >/dev/null; then
-        if confirm "Do you want to update AUR packages (yay)?"; then
-            echo "Updating AUR packages..."
-            yay -Syu --noconfirm
-        else
-            echo "AUR update skipped."
-        fi
+    echo "Checking for updates with your $AUR_HELPER"
+
+   case "$AUR_HELPER" in
+
+    yay|paru|pikaur|trizen|aurman)
+        cmd=("$AUR_HELPER" -Syu)
+        ;;
+
+    pamac)
+        cmd=(pamac upgrade)
+        ;;
+
+    None)
+        echo "AUR helper set to None so no AUR helper commands used."
+        return
+        ;;
+
+    *)
+        echo "AUR helper checker made a mistake. Nothing happened."
+        return
+        ;;
+
+    esac
+
+    if confirm "Proceed with ${cmd[*]}?"; then
+        warn_fail --user "${cmd[@]}"
     else
-        echo "No AUR helper found, skipping AUR update."
+        echo "Aborted."
     fi
+
 
     # Config file differences
     if command -v pacdiff >/dev/null; then
         echo "Running pacdiff to review config changes..."
         echo "You will need to manually review and merge changes."
-        pacdiff
+        warn_fail --user pacdiff
     else
         echo "pacdiff not installed, skipping config review."
     fi

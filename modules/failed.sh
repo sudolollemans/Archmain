@@ -15,5 +15,5 @@ log_inspect() {
         dmesg --level=err
     fi
 
-    echo "Check complete!
+    echo "Check complete!"
 }
