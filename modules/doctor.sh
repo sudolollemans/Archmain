@@ -23,7 +23,11 @@ system_check() {
     # Orphaned packages (pacman)
     log_section "ORPHANED PACMAN PACKAGES"
     orphans=$(pacman -Qtdq 2>/dev/null || true)
-    [[ -z "$orphans" ]] && echo "None" || echo "$orphans" | tee -a "$HEALTHFILE"
+    if [[ -z "$orphans" ]]; then
+        echo "None" | tee -a "$HEALTHFILE"
+    else
+        echo "$orphans" | tee -a "$HEALTHFILE"
+    fi
 
     # Journal errors
     log_section "JOURNAL ERRORS (last 50)"

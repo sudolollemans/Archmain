@@ -12,12 +12,12 @@ clean_cache() {
 
     case "$choice" in
         1)
-            pacman_cmd="pacman -Sc"
+            pacman_cmd=(pacman -Sc)
             ;;
         2)
             echo "WARNING: This will remove ALL cached packages."
             echo "You will not be able to downgrade easily."
-            pacman_cmd="pacman -Scc"
+            pacman_cmd=(pacman -Scc)
             ;;
         *)
             echo "Invalid option."
@@ -26,7 +26,7 @@ clean_cache() {
     esac
 
     # Run pacman
-    if confirm "Proceed with $pacman_cmd?"; then
+    if confirm "Proceed with ${pacman_cmd[*]}?"; then
         warn_fail "${pacman_cmd[@]}"
     else
         echo "Aborted."
@@ -36,23 +36,23 @@ clean_cache() {
     # AUR helper logic
     case "$choice:$AUR_HELPER" in
 
-        1:yay)      cmd="yay -Sc" ;;
-        2:yay)      cmd="yay -Scc" ;;
+        1:yay)      cmd=(yay -Sc) ;;
+        2:yay)      cmd=(yay -Scc) ;;
 
-        1:paru)     cmd="paru -Sc" ;;
-        2:paru)     cmd="paru -Scc" ;;
+        1:paru)     cmd=(paru -Sc) ;;
+        2:paru)     cmd=(paru -Scc) ;;
 
-        1:pikaur)   cmd="pikaur -Sc" ;;
-        2:pikaur)   cmd="pikaur -Scc" ;;
+        1:pikaur)   cmd=(pikaur -Sc) ;;
+        2:pikaur)   cmd=(pikaur -Scc) ;;
 
-        1:trizen)   cmd="trizen -Sc" ;;
-        2:trizen)   cmd="trizen -Scc" ;;
+        1:trizen)   cmd=(trizen -Sc) ;;
+        2:trizen)   cmd=(trizen -Scc) ;;
 
-        1:aurman)   cmd="aurman -Sc" ;;
-        2:aurman)   cmd="aurman -Scc" ;;
+        1:aurman)   cmd=(aurman -Sc) ;;
+        2:aurman)   cmd=(aurman -Scc) ;;
 
-        1:pamac)    cmd="pamac clean" ;;
-        2:pamac)    cmd="pamac clean --build-files" ;;
+        1:pamac)    cmd=(pamac clean) ;;
+        2:pamac)    cmd=(pamac clean --build-files) ;;
 
         *:None)
             echo "No AUR helper configured."
@@ -65,7 +65,7 @@ clean_cache() {
             ;;
     esac
 
-    if confirm "Proceed with $cmd?"; then
+    if confirm "Proceed with ${cmd[*]}?"; then
         warn_fail --user "${cmd[@]}"
     else
         echo "Aborted."
