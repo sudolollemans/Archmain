@@ -2,8 +2,6 @@ Maintenance script I wrote as a personal project to learn Bash (and Arch).
 
 ------------------------------------------------------------------------------------
 
-# Archmain
-
 A modular Arch Linux maintenance script for backups, updates, cleanup, and system diagnostics.
 
 # --- Project Structure ---
