@@ -1,27 +1,25 @@
 Maintenance script I wrote as a personal project to learn Bash (and Arch). 
 
-I'm planning on implementing a file manager by improving one of the modules (files.sh). 
-
 ------------------------------------------------------------------------------------
 
 # Archmain
 
-A modular Arch Linux maintenance script for backups, updates, cleanup, and system diagnostics — all in one place.
+A modular Arch Linux maintenance script for backups, updates, cleanup, and system diagnostics.
 
 # --- Project Structure ---
 
 archmain/
-archmain (main script)
-modules/
-├── backup.sh
-├── clean.sh
-├── software.sh
-├── doctor.sh
-├── firmware.sh
-├── orphaned.sh
-├── journal.sh
-├── files.sh
-└── failed.sh
+  archmain (main script)
+  modules/
+  ├── backup.sh
+  ├── clean.sh
+  ├── software.sh
+  ├── doctor.sh
+  ├── firmware.sh
+  ├── orphaned.sh
+  ├── journal.sh
+  ├── files.sh
+  └── failed.sh
 
 # --- Requirements ---
 
@@ -61,7 +59,7 @@ Optional:
   - Firmware update checks
 
 - Utilities:
-  - Find largest files in home directory
+  - File manager
 
 - Modular design:
   - Features split into `/modules`
@@ -79,7 +77,7 @@ Without arguments you'll get a menu:
 5 Clean package cache
 6 Inspect failed services and errors
 7 Clean journal logs
-8 List biggest files
+8 File manager
 d System health check
 q Quit
 
