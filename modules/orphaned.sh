@@ -13,7 +13,7 @@ orphaned_pkg() {
         echo "$pacman_orphans" > "$output_file"
         echo "Orphaned pacman packages saved to $output_file"
         if confirm "Do you want to remove these orphaned pacman packages?"; then
-            pacman -Rns --noconfirm $pacman_orphans
+            pacman -Rns --noconfirm "$pacman_orphans"
         else
             echo "Pacman orphan removal skipped."
         fi

@@ -235,7 +235,7 @@ show_menu() {
     echo "5 Clean package cache"
     echo "6 Inspect failed services and errors"
     echo "7 Clean journal logs"
-    echo "8 List 10 biggest directories and files in home"
+    echo "8 File maintenance"
     echo
     echo "d System health check"
     echo
