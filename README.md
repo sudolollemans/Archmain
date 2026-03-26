@@ -1,10 +1,6 @@
-Maintenance script I wrote as a personal project to learn Bash (and Arch).   
+A modular Arch Linux maintenance script for backups, updates, cleanup, and system diagnostics.  
 
 _Note: This is a personal tool created for myself (free to use)_  
-
-------------------------------------------------------------------------------------
-
-A modular Arch Linux maintenance script for backups, updates, cleanup, and system diagnostics.  
 
 # --- Project Structure ---  
 
