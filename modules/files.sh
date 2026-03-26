@@ -127,7 +127,7 @@ big_files() {
 
             if confirm "Delete these empty files and directories?"; then
                 find "$USER_HOME" -type f -empty -delete
-                find "$USER_HOME" -type d -empty -depth -delete
+                find "$USER_HOME" -depth -type d -empty -delete
             else
                 echo "Aborted."
                 return
