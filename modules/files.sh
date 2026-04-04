@@ -48,10 +48,17 @@ big_files() {
         4)
             log "Checking broken symlinks"
 
-            cmd=(find "$USER_HOME" -xtype l)
+            cmd=(find /path -type l ! -exec test -e {} \;)
 
             echo "Broken symlinks:"
-            "${cmd[@]}" -print
+            results="$("${cmd[@]}" -print)"
+
+            if [[ -z "$results" ]]; then
+                echo "None found."
+                return
+            fi
+
+            echo "$results"
 
             if confirm "Delete these broken symlinks?"; then
                 "${cmd[@]}" -delete
