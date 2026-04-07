@@ -42,13 +42,4 @@ backup_files() {
         --exclude=".steam/" \
         "$USER_HOME/" "$DEST/home/"
 
-    echo
-    echo "Preview: /etc backup (dry run)"
-    rsync -aAXHv --numeric-ids --delete --dry-run /etc/ "$DEST/etc/"
-
-    echo "WARNING: This will overwrite files in $DEST/etc/"
-
-    if confirm "Proceed with /etc backup?"; then
-        rsync -aAXHv --numeric-ids --delete /etc/ "$DEST/etc/"
-    fi
 }
